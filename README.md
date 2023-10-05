@@ -22,7 +22,7 @@
   * Rspec
   * Heroku
 
-# システム構成図
+# システム構成
   * 開発環境：VS code,docker
   * CI/CD: CircleCI
   * デプロイ環境：Heroku
