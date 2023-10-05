@@ -1,0 +1,32 @@
+# -*- mode: dockerfile -*-
+FROM ruby:2.7.3-buster
+
+RUN apt-get update                                                                                                                      \
+  && apt-get install                                                                                                                    \
+    openssl                                                                                                                             \
+  && curl -sL https://deb.nodesource.com/setup_14.x | bash -                                                                            \
+  && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -                                                                  \
+  && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list                                      \
+  && wget https://dev.mysql.com/get/mysql-apt-config_0.8.22-1_all.deb                                                                   \
+  && DEBIAN_FRONTEND=noninteractive dpkg -i mysql-apt-config_0.8.22-1_all.deb                                                           \
+  && apt-get update                                                                                                                     \
+  && apt-get remove -y                                                                                                                  \
+    libmariadbclient18                                                                                                                  \
+    libmariadbclient-dev-compat                                                                                                         \
+    libmariadbclient-dev                                                                                                                \
+  && apt-get install -y --allow-unauthenticated                                                                                         \
+    libmysqlclient-dev                                                                                                                  \
+    mysql-client                                                                                                                        \
+    libxml2-dev                                                                                                                         \
+    libxslt-dev                                                                                                                         \
+    libc6-dev                                                                                                                           \
+    nodejs                                                                                                                              \
+    yarn                                                                                                                                \
+    zip                                                                                                                                 \
+  && gem install foreman                                                                                                                \
+  && apt-get clean
+
+RUN mkdir /potepanec
+WORKDIR /potepanec
+COPY . /potepanec
+RUN bundle install

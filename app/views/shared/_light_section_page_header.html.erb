@@ -1,0 +1,20 @@
+<section class="lightSection clearfix pageHeader">
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-6">
+        <div class="page-title">
+          <h2><%= breadcrumb_name %></h2>
+        </div>
+      </div>
+      <div class="col-xs-6">
+        <ol class="breadcrumb pull-right">
+          <li><%= link_to "Home", potepan_path %></li>
+          <% if shop_display %>
+            <li><%= link_to "Shop", "#" %></li>
+          <% end %>
+          <li class="active"><%= breadcrumb_name %></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>

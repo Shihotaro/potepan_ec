@@ -1,0 +1,36 @@
+version: "3"
+
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    networks:
+      - default
+    ports:
+      - '33306:3306'
+    command: --default-authentication-plugin=mysql_native_password
+  redis:
+    image: redis:alpine
+    networks:
+      - default
+    ports:
+      - '36379:6379'
+  potepanec:
+    build:
+      context: .
+      dockerfile: Dockerfile.ci
+    container_name: potepanec_app
+    ports:
+      - '3000:3000'
+    environment:
+      MYSQL_USERNAME: root
+      MYSQL_PASSWORD: password
+      MYSQL_HOST: mysql
+      REDIS_URL: "redis://redis:6379"
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - default
+    command: bundle exec rails server -b 0.0.0.0

@@ -1,0 +1,19 @@
+# .rubocop.yml
+Rails:
+  Enabled: true
+
+inherit_from:
+  - .rubocop_airbnb.yml
+
+AllCops:
+  NewCops: enable
+  Exclude:
+    - "config/environments/*"
+    - "config/initializers/*"
+    - "db/**/*"
+    - "lib/**/*"
+    - "vendor/**/*"
+    - "bin/**"
+
+Style/RedundantFreeze:
+  Enabled: false

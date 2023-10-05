@@ -1,0 +1,82 @@
+version: 2.1
+
+orbs:
+  heroku: circleci/heroku@2.0
+
+jobs:
+  rspec:
+    working_directory: ~/potepanec
+    docker:
+      - image: cimg/ruby:2.7.3
+    resource_class: small
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 20.10.14
+      - run:
+          name: Setup environment variable
+          command: |
+            echo "export COMPOSE_FILE=docker-compose.ci.yml" >> $BASH_ENV
+      - run:
+          name: Start containers and verify it is working
+          command: |
+            set -x
+            docker-compose up -d
+            docker exec potepanec_app curl -4 --retry 10 --retry-delay 3 --retry-connrefused http://localhost:3000
+      - run:
+          name: Setup database
+          command: |
+            docker-compose exec potepanec bash -c 'yes n | bundle exec rails g spree:install --migrate --seed --sample --auto_accept'
+      - run:
+          name: Run rspec
+          command: docker-compose exec potepanec rspec
+
+  rubocop:
+    working_directory: ~/potepanec
+    docker:
+      - image: cimg/ruby:2.7.3
+    resource_class: small
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - gemfiles-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
+            - gemfiles-{{ .Branch }}-
+            - gemfiles-master-
+      - run: bundle config --local path vendor/bundle
+      - run:
+          name: bundle install
+          command: bundle check || bundle install --jobs=8 --clean
+      - run:
+          name: Run rubocop
+          command: bundle exec rubocop --require rubocop-airbnb
+      - save_cache:
+          key: gemfiles-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
+          paths:
+            - vendor/bundle
+
+  heroku_deploy:
+    working_directory: ~/potepanec
+    executor: heroku/default
+    resource_class: small
+    steps:
+      - checkout
+      - heroku/install
+      - run:
+          name: Deploy
+          command: git push https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME.git HEAD:master
+      - run:
+          name: Run post-deploy tasks
+          command: |
+            heroku run bin/rails db:migrate -a $HEROKU_APP_NAME
+
+workflows:
+  version: 2.1
+  build:
+    jobs:
+      - rspec
+      - rubocop
+      - heroku_deploy:
+          requires:
+            - rspec
+            - rubocop
